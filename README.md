@@ -1,88 +1,76 @@
 # ANN Operating Profit Prediction
 
-An Artificial Neural Network (ANN) project that predicts operating profit before tax using enterprise survey data.
+An Artificial Neural Network (ANN) regression project that predicts **Operating profit before tax** from annual enterprise survey data.
 
 ## Project Overview
 
-This project uses Python, Pandas, Scikit-learn, TensorFlow, and Keras to prepare enterprise survey data and train an ANN regression model.
+The dataset contains aggregate enterprise observations from **2011–2025**, including year, industry, enterprise size band, and operating profit before tax.
 
-The dataset contains enterprise information from 2011 to 2025, including:
+The workflow covers data cleaning, confidential-value handling, removal of aggregate totals, categorical encoding, scaling, chronological splitting, ANN training, evaluation, visualization, and model export.
 
-- Year
-- Industry
-- Enterprise size
-- Industry code
-- Operating profit before tax
+## Data Cleaning
 
-## Data Preparation
+The source contains `C` values for confidential/suppressed observations. These are converted to missing values and excluded from the regression target.
 
-The project includes:
+Published aggregate groups such as `i_Industry_Total` and `j_Grand_Total` are excluded so the model learns from enterprise-size bands rather than mixing size-band observations with aggregate totals.
 
-- Data cleaning
-- Removal of unnecessary columns
-- Target variable selection
-- Categorical encoding
-- Duplicate checking
-- Train/test splitting
-- Feature scaling with StandardScaler
+## Evaluation Methodology
 
-## ANN Model
+A random train/test split was avoided because the data is organized by year, industry, and size group. A random split could place closely related observations from the same periods in both training and test sets.
 
-The model was built using TensorFlow/Keras.
+The corrected notebook uses:
 
-Architecture:
+- **Training:** 2011–2023
+- **Validation:** 2024
+- **Test:** 2025
 
-- Input: 48 features
-- Dense layer: 64 neurons, ReLU
-- Dense layer: 32 neurons, ReLU
-- Dense layer: 16 neurons, ReLU
+The final test metrics therefore measure performance on a completely held-out year.
+
+## Features
+
+The model uses `year`, `industry_name_ANZSIC`, and `rme_size_grp`. The industry code is omitted because it duplicates the industry category information.
+
+Categorical variables are one-hot encoded. Features are standardized using training data only. The target is also standardized using training data only and converted back to original units for final evaluation.
+
+## ANN Architecture
+
+- Input layer
+- Dense: 64 neurons, ReLU
+- Dense: 32 neurons, ReLU
+- Dense: 16 neurons, ReLU
 - Output: 1 neuron
 
-The model uses the Adam optimizer and Mean Squared Error (MSE) loss.
+Training uses Adam, MSE loss, validation data from 2024, and early stopping.
 
-## Results
+## Metrics
 
-Test MAE: **479.02**
+The notebook reports MAE, RMSE, and R².
 
-Test RMSE: **1571.48**
+R² is **not classification accuracy**. It should be reported as an R² value such as `0.95`, not as '95% accuracy'.
 
-R² Score: **0.9541**
-
-The model achieved an R² score of approximately **95.4%** on the test dataset.
-
-## Visualizations
-
-The project includes:
-
-- Training and validation loss
-- Actual vs. predicted operating profit
-
-## Technologies
-
-- Python
-- Pandas
-- NumPy
-- Matplotlib
-- Scikit-learn
-- TensorFlow
-- Keras
+The previous random-split metrics are no longer presented as the final results. Run the corrected notebook to generate the current 2025 test metrics.
 
 ## Project Structure
 
 ```
-ANN_PROJECT/
+ANN-Operating-Profit-Prediction/
 ├── data/
-│   └── annual-enterprise-survey-2025-financial-year-provisional.csv
+│   └── annual-enterprise-survey-2025-financial-year-provisional-size-bands.csv
 ├── notebook/
 │   ├── 01_data_understanding.ipynb
 │   ├── cleaned_operating_profit_data.csv
 │   ├── operating_profit_ann.keras
-│   ├── scaler.pkl
+│   ├── preprocessor.pkl
+│   ├── target_scaler.pkl
 │   ├── actual_vs_predicted.png
 │   └── training_loss.png
 └── README.md
 ```
 
+## Technologies
+
+Python, Pandas, NumPy, Matplotlib, Scikit-learn, TensorFlow, Keras, and Joblib.
+
 ## Purpose
 
-This project demonstrates an end-to-end machine learning workflow, from data understanding and preprocessing to ANN training, evaluation, and visualization.
+This project demonstrates an end-to-end ANN regression workflow with a time-aware evaluation strategy for a more realistic estimate of future-year performance.
